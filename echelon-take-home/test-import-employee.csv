@@ -1,0 +1,2 @@
+firstName,lastName,email,phone,title,department,managerId,hireDate,salary,status
+Robert,Johnson,robert.johnson@echelon.com,+1-555-9876,Senior Product Designer,Design,,2024-03-15,98000,active

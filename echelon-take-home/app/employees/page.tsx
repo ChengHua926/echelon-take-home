@@ -24,11 +24,13 @@ import {
   Users,
   Building2,
   UserCheck,
+  Upload,
 } from 'lucide-react'
 import { useEmployees } from '@/hooks/useEmployees'
 import { useDebounce } from '@/hooks/useDebounce'
 import { AddEmployeeModal } from '@/components/add-employee-modal'
 import { EmployeeDetailModal } from '@/components/employee-detail-modal'
+import { ImportEmployeesModal } from '@/components/import-employees-modal'
 
 export default function EmployeesPage() {
   // State management
@@ -42,6 +44,7 @@ export default function EmployeesPage() {
 
   // Modal state
   const [addModalOpen, setAddModalOpen] = useState(false)
+  const [importModalOpen, setImportModalOpen] = useState(false)
   const [detailModalOpen, setDetailModalOpen] = useState(false)
   const [selectedEmployeeId, setSelectedEmployeeId] = useState<string | null>(null)
 
@@ -124,14 +127,25 @@ export default function EmployeesPage() {
                 </p>
               </div>
             </div>
-            <Button
-              size="lg"
-              onClick={() => setAddModalOpen(true)}
-              className="gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-lg shadow-blue-500/30 hover:shadow-xl hover:shadow-blue-500/40 transition-all text-white font-semibold px-8 h-12 rounded-xl"
-            >
-              <Plus className="h-5 w-5" />
-              Add Employee
-            </Button>
+            <div className="flex items-center gap-3">
+              <Button
+                size="lg"
+                variant="outline"
+                onClick={() => setImportModalOpen(true)}
+                className="gap-2 border-slate-300 hover:bg-slate-50 hover:border-slate-400 shadow-sm hover:shadow-md transition-all font-semibold px-6 h-12 rounded-xl"
+              >
+                <Upload className="h-5 w-5" />
+                Import CSV/Excel
+              </Button>
+              <Button
+                size="lg"
+                onClick={() => setAddModalOpen(true)}
+                className="gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-lg shadow-blue-500/30 hover:shadow-xl hover:shadow-blue-500/40 transition-all text-white font-semibold px-8 h-12 rounded-xl"
+              >
+                <Plus className="h-5 w-5" />
+                Add Employee
+              </Button>
+            </div>
           </div>
 
           {/* Search Bar */}
@@ -484,6 +498,11 @@ export default function EmployeesPage() {
         open={addModalOpen}
         onOpenChange={setAddModalOpen}
         onSuccess={handleAddSuccess}
+      />
+      <ImportEmployeesModal
+        open={importModalOpen}
+        onOpenChange={setImportModalOpen}
+        onImportComplete={handleAddSuccess}
       />
       <EmployeeDetailModal
         employeeId={selectedEmployeeId}
