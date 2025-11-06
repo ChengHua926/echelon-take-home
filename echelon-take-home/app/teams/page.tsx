@@ -273,7 +273,14 @@ export default function TeamsPage() {
               </SelectContent>
             </Select>
 
-            {/* Sort */}
+            {/* Divider */}
+            <div className="h-8 w-px bg-slate-300 mx-2"></div>
+
+            {/* Sort Section */}
+            <div className="flex items-center gap-2 text-sm font-semibold text-slate-700">
+              <ArrowUpDown className="h-4 w-4 text-slate-500" />
+              Sort
+            </div>
             <div className="flex items-center gap-2">
               <Select value={sortBy} onValueChange={setSortBy}>
                 <SelectTrigger className="w-[180px] h-11 border-slate-200 bg-white rounded-lg hover:bg-slate-50 transition-colors shadow-sm">
@@ -301,7 +308,6 @@ export default function TeamsPage() {
                 className="border-slate-200 h-11 px-4 bg-white hover:bg-slate-50 rounded-lg shadow-sm"
                 title={sortOrder === 'asc' ? 'Ascending' : 'Descending'}
               >
-                <ArrowUpDown className="h-4 w-4 mr-2" />
                 {sortOrder === 'asc' ? '↑ A-Z' : '↓ Z-A'}
               </Button>
             </div>
