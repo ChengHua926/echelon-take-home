@@ -236,7 +236,7 @@ export default function EmployeesPage() {
                 variant="ghost"
                 size="sm"
                 onClick={clearFilters}
-                className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 h-11 px-4 rounded-lg"
+                className="text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 h-11 px-4 rounded-lg"
               >
                 <X className="h-4 w-4 mr-2" />
                 Clear All
