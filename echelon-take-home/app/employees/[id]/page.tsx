@@ -9,10 +9,11 @@ import { prisma } from '@/lib/prisma'
 export default async function EmployeeDetailPage({
   params,
 }: {
-  params: { id: string }
+  params: Promise<{ id: string }>
 }) {
+  const { id } = await params
   const employee = await prisma.employee.findUnique({
-    where: { id: params.id },
+    where: { id },
     include: {
       manager: {
         select: {

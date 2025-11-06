@@ -7,9 +7,10 @@ import { prisma } from '@/lib/prisma'
 export default async function SearchPage({
   searchParams,
 }: {
-  searchParams: { q?: string }
+  searchParams: Promise<{ q?: string }>
 }) {
-  const query = searchParams.q || ''
+  const params = await searchParams
+  const query = params.q || ''
 
   // Search employees
   const employees = query

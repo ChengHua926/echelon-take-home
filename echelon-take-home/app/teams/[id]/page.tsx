@@ -8,10 +8,11 @@ import { prisma } from '@/lib/prisma'
 export default async function TeamDetailPage({
   params,
 }: {
-  params: { id: string }
+  params: Promise<{ id: string }>
 }) {
+  const { id } = await params
   const team = await prisma.team.findUnique({
-    where: { id: params.id },
+    where: { id },
     include: {
       teamLead: {
         select: {

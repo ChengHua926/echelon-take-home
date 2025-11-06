@@ -49,3 +49,138 @@ body {
   font-feature-settings: "rlig" 1, "calt" 1;
   font-family: var(--font-geist-sans), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
+
+/* Org Chart Styles */
+.orgchart-container {
+  position: relative;
+  display: inline-block;
+  height: 100%;
+  width: 100%;
+  border-radius: 5px;
+  overflow: auto;
+  text-align: center;
+}
+
+.orgchart {
+  box-sizing: border-box;
+  display: inline-block;
+  min-height: 202px;
+  min-width: 202px;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  background-size: 10px 10px;
+  border: 1px dashed transparent;
+  padding: 20px;
+}
+
+.orgchart .hidden,
+.orgchart ~ .hidden {
+  display: none;
+}
+
+.orgchart.b2t {
+  transform: rotate(180deg);
+}
+
+.orgchart.l2r {
+  transform: rotate(-90deg) rotateY(180deg);
+}
+
+.orgchart.r2l {
+  transform: rotate(-90deg);
+}
+
+.orgchart > ul > li > ul li::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  width: 2px;
+  height: 20px;
+  background-color: #d2d2d7;
+}
+
+.orgchart > ul > li > ul li:first-child::before {
+  left: 50%;
+}
+
+.orgchart > ul > li > ul li:not(:first-child)::before {
+  right: 50%;
+}
+
+.orgchart ul {
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.orgchart ul li {
+  position: relative;
+  padding: 0 0 20px 0;
+}
+
+.orgchart ul li::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 0;
+  height: 20px;
+  border-left: 2px solid #d2d2d7;
+}
+
+.orgchart ul li:first-child::before {
+  left: 50%;
+  border-left: 2px solid #d2d2d7;
+}
+
+.orgchart ul li:last-child::before {
+  right: 50%;
+  border-right: 2px solid #d2d2d7;
+}
+
+.orgchart ul li:not(:only-child)::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  height: 2px;
+  background-color: #d2d2d7;
+}
+
+.orgchart ul li:not(:only-child):not(:first-child):not(:last-child)::before {
+  left: 0;
+  right: 0;
+}
+
+.orgchart .node {
+  position: relative;
+  display: inline-block;
+  box-sizing: border-box;
+  text-align: center;
+}
+
+.orgchart .node .toggleBtn {
+  position: absolute;
+  left: 50%;
+  bottom: -25px;
+  margin-left: -12px;
+  color: #fff;
+  background-color: #0071e3;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  font-size: 14px;
+  line-height: 20px;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.orgchart .node .toggleBtn:hover {
+  background-color: #0077ed;
+  transform: scale(1.1);
+}
