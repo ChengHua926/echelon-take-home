@@ -69,18 +69,18 @@ export function ExportButton({
           {loading ? `Exporting...` : label}
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-48">
-        <DropdownMenuLabel>Export Format</DropdownMenuLabel>
-        <DropdownMenuSeparator />
+      <DropdownMenuContent align="end" className="w-48 bg-white border-2 border-slate-200 shadow-xl">
+        <DropdownMenuLabel className="text-slate-700 font-semibold">Export Format</DropdownMenuLabel>
+        <DropdownMenuSeparator className="bg-slate-200" />
 
         {onExportCSV && (
           <DropdownMenuItem
             onClick={() => handleExport('CSV', onExportCSV)}
             disabled={loading}
-            className="cursor-pointer"
+            className="cursor-pointer hover:bg-slate-50 focus:bg-slate-100 py-2.5 px-3 rounded-md"
           >
             <FileText className="h-4 w-4 mr-2 text-green-600" />
-            <span>Export as CSV</span>
+            <span className="font-medium text-slate-700">Export as CSV</span>
             {loadingType === 'CSV' && (
               <Loader2 className="h-3 w-3 ml-auto animate-spin" />
             )}
@@ -91,10 +91,10 @@ export function ExportButton({
           <DropdownMenuItem
             onClick={() => handleExport('Excel', onExportExcel)}
             disabled={loading}
-            className="cursor-pointer"
+            className="cursor-pointer hover:bg-slate-50 focus:bg-slate-100 py-2.5 px-3 rounded-md"
           >
             <FileSpreadsheet className="h-4 w-4 mr-2 text-green-700" />
-            <span>Export as Excel</span>
+            <span className="font-medium text-slate-700">Export as Excel</span>
             {loadingType === 'Excel' && (
               <Loader2 className="h-3 w-3 ml-auto animate-spin" />
             )}
@@ -105,10 +105,10 @@ export function ExportButton({
           <DropdownMenuItem
             onClick={() => handleExport('PDF', onExportPDF)}
             disabled={loading}
-            className="cursor-pointer"
+            className="cursor-pointer hover:bg-slate-50 focus:bg-slate-100 py-2.5 px-3 rounded-md"
           >
             <FileText className="h-4 w-4 mr-2 text-red-600" />
-            <span>Export as PDF</span>
+            <span className="font-medium text-slate-700">Export as PDF</span>
             {loadingType === 'PDF' && (
               <Loader2 className="h-3 w-3 ml-auto animate-spin" />
             )}
@@ -119,10 +119,10 @@ export function ExportButton({
           <DropdownMenuItem
             onClick={() => handleExport('PNG', onExportPNG)}
             disabled={loading}
-            className="cursor-pointer"
+            className="cursor-pointer hover:bg-slate-50 focus:bg-slate-100 py-2.5 px-3 rounded-md"
           >
             <Image className="h-4 w-4 mr-2 text-blue-600" />
-            <span>Export as PNG</span>
+            <span className="font-medium text-slate-700">Export as PNG</span>
             {loadingType === 'PNG' && (
               <Loader2 className="h-3 w-3 ml-auto animate-spin" />
             )}

@@ -6,11 +6,7 @@ import OrgChartFlow from '@/components/org-chart/org-chart-flow'
 import { EmployeeDetailModal } from '@/components/employee-detail-modal'
 import { EmployeeNode } from '@/components/org-chart/utils'
 import { ExportButton } from '@/components/export-button'
-import {
-  exportOrgChartToCSV,
-  exportOrgChartToPDF,
-  exportOrgChartToPNG,
-} from '@/lib/export-utils'
+import { exportOrgChartToCSV } from '@/lib/export-utils'
 
 interface OrgChartClientProps {
   data: EmployeeNode[]
@@ -49,8 +45,6 @@ export default function OrgChartClient({ data }: OrgChartClientProps) {
             {data.length > 0 && (
               <ExportButton
                 onExportCSV={() => exportOrgChartToCSV(data, 'org-chart')}
-                onExportPDF={async () => await exportOrgChartToPDF('org-chart-container', 'org-chart')}
-                onExportPNG={async () => await exportOrgChartToPNG('org-chart-container', 'org-chart')}
                 label="Export"
                 variant="outline"
                 size="lg"

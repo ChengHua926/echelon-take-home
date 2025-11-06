@@ -267,6 +267,29 @@ export async function exportOrgChartToPDF(elementId: string, filename = 'org-cha
       scale: 2,
       backgroundColor: '#ffffff',
       logging: false,
+      ignoreElements: (element) => {
+        // Ignore elements that might cause issues
+        return element.tagName === 'IFRAME'
+      },
+      onclone: (clonedDoc) => {
+        // Replace oklch colors with rgb equivalents in the cloned document
+        const style = clonedDoc.createElement('style')
+        style.textContent = `
+          * {
+            color: rgb(15 23 42) !important;
+            background-color: white !important;
+            border-color: rgb(203 213 225) !important;
+          }
+          [class*="bg-cyan"] { background-color: rgb(6 182 212) !important; }
+          [class*="bg-blue"] { background-color: rgb(59 130 246) !important; }
+          [class*="bg-indigo"] { background-color: rgb(99 102 241) !important; }
+          [class*="bg-slate"] { background-color: rgb(241 245 249) !important; }
+          [class*="text-white"] { color: white !important; }
+          [class*="text-slate"] { color: rgb(100 116 139) !important; }
+          [class*="border-slate"] { border-color: rgb(226 232 240) !important; }
+        `
+        clonedDoc.head.appendChild(style)
+      },
     })
 
     const imgData = canvas.toDataURL('image/png')
@@ -298,6 +321,29 @@ export async function exportOrgChartToPNG(elementId: string, filename = 'org-cha
       scale: 2,
       backgroundColor: '#ffffff',
       logging: false,
+      ignoreElements: (element) => {
+        // Ignore elements that might cause issues
+        return element.tagName === 'IFRAME'
+      },
+      onclone: (clonedDoc) => {
+        // Replace oklch colors with rgb equivalents in the cloned document
+        const style = clonedDoc.createElement('style')
+        style.textContent = `
+          * {
+            color: rgb(15 23 42) !important;
+            background-color: white !important;
+            border-color: rgb(203 213 225) !important;
+          }
+          [class*="bg-cyan"] { background-color: rgb(6 182 212) !important; }
+          [class*="bg-blue"] { background-color: rgb(59 130 246) !important; }
+          [class*="bg-indigo"] { background-color: rgb(99 102 241) !important; }
+          [class*="bg-slate"] { background-color: rgb(241 245 249) !important; }
+          [class*="text-white"] { color: white !important; }
+          [class*="text-slate"] { color: rgb(100 116 139) !important; }
+          [class*="border-slate"] { border-color: rgb(226 232 240) !important; }
+        `
+        clonedDoc.head.appendChild(style)
+      },
     })
 
     canvas.toBlob((blob) => {
