@@ -128,3 +128,74 @@ export async function GET(request: Request) {
     )
   }
 }
+
+export async function POST(request: Request) {
+  try {
+    const body = await request.json()
+
+    // Validate required fields
+    const {
+      firstName,
+      lastName,
+      email,
+      title,
+      department,
+      hireDate,
+      managerId,
+      phone,
+      salary,
+    } = body
+
+    if (!firstName || !lastName || !email || !title || !department || !hireDate) {
+      return NextResponse.json(
+        { error: 'Missing required fields' },
+        { status: 400 }
+      )
+    }
+
+    // Check if email already exists
+    const existingEmployee = await prisma.employee.findUnique({
+      where: { email },
+    })
+
+    if (existingEmployee) {
+      return NextResponse.json(
+        { error: 'Employee with this email already exists' },
+        { status: 409 }
+      )
+    }
+
+    // Create new employee
+    const employee = await prisma.employee.create({
+      data: {
+        firstName,
+        lastName,
+        email,
+        title,
+        department,
+        hireDate: new Date(hireDate),
+        managerId: managerId || null,
+        phone: phone || null,
+        salary: salary ? parseFloat(salary) : null,
+        status: 'active',
+      },
+      include: {
+        manager: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+          },
+        },
+      },
+    })
+
+    return NextResponse.json(employee, { status: 201 })
+  } catch (error) {
+    console.error('Error creating employee:', error)
+    return NextResponse.json(
+      { error: 'Failed to create employee' },
+      { status: 500 }
+    )
+  }
+}

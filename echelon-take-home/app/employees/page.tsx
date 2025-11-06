@@ -1,7 +1,6 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card } from '@/components/ui/card'
@@ -28,6 +27,8 @@ import {
 } from 'lucide-react'
 import { useEmployees } from '@/hooks/useEmployees'
 import { useDebounce } from '@/hooks/useDebounce'
+import { AddEmployeeModal } from '@/components/add-employee-modal'
+import { EmployeeDetailModal } from '@/components/employee-detail-modal'
 
 export default function EmployeesPage() {
   // State management
@@ -39,11 +40,16 @@ export default function EmployeesPage() {
   const [page, setPage] = useState(1)
   const [limit] = useState(20)
 
+  // Modal state
+  const [addModalOpen, setAddModalOpen] = useState(false)
+  const [detailModalOpen, setDetailModalOpen] = useState(false)
+  const [selectedEmployeeId, setSelectedEmployeeId] = useState<string | null>(null)
+
   // Debounce search
   const debouncedSearch = useDebounce(searchQuery, 300)
 
   // Fetch data - only send filters if they're not "all"
-  const { employees, pagination, loading, error } = useEmployees({
+  const { employees, pagination, loading, error, refetch } = useEmployees({
     search: debouncedSearch,
     department: department !== 'all' ? department : undefined,
     managerId: managerId !== 'all' ? managerId : undefined,
@@ -52,6 +58,17 @@ export default function EmployeesPage() {
     page,
     limit,
   })
+
+  // Handle employee click
+  const handleEmployeeClick = (employeeId: string) => {
+    setSelectedEmployeeId(employeeId)
+    setDetailModalOpen(true)
+  }
+
+  // Handle add employee success
+  const handleAddSuccess = () => {
+    refetch()
+  }
 
   // Fetch filter options
   const [departments, setDepartments] = useState<string[]>([])
@@ -107,15 +124,14 @@ export default function EmployeesPage() {
                 </p>
               </div>
             </div>
-            <Link href="/employees/new">
-              <Button
-                size="lg"
-                className="gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-lg shadow-blue-500/30 hover:shadow-xl hover:shadow-blue-500/40 transition-all text-white font-semibold px-8 h-12 rounded-xl"
-              >
-                <Plus className="h-5 w-5" />
-                Add Employee
-              </Button>
-            </Link>
+            <Button
+              size="lg"
+              onClick={() => setAddModalOpen(true)}
+              className="gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-lg shadow-blue-500/30 hover:shadow-xl hover:shadow-blue-500/40 transition-all text-white font-semibold px-8 h-12 rounded-xl"
+            >
+              <Plus className="h-5 w-5" />
+              Add Employee
+            </Button>
           </div>
 
           {/* Search Bar */}
@@ -341,7 +357,10 @@ export default function EmployeesPage() {
                       }`}
                     >
                       <td className="px-8 py-5 whitespace-nowrap">
-                        <Link href={`/employees/${employee.id}`} className="flex items-center gap-4">
+                        <button
+                          onClick={() => handleEmployeeClick(employee.id)}
+                          className="flex items-center gap-4 w-full text-left"
+                        >
                           <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 via-blue-600 to-indigo-600 flex items-center justify-center text-white font-bold text-base shadow-md group-hover:shadow-lg group-hover:scale-105 transition-all">
                             {employee.firstName[0]}{employee.lastName[0]}
                           </div>
@@ -350,7 +369,7 @@ export default function EmployeesPage() {
                               {employee.firstName} {employee.lastName}
                             </div>
                           </div>
-                        </Link>
+                        </button>
                       </td>
                       <td className="px-8 py-5 whitespace-nowrap">
                         <div className="text-sm text-slate-700 font-medium">{employee.title}</div>
@@ -365,12 +384,12 @@ export default function EmployeesPage() {
                       </td>
                       <td className="px-8 py-5 whitespace-nowrap text-sm text-slate-600">
                         {employee.manager ? (
-                          <Link
-                            href={`/employees/${employee.manager.id}`}
+                          <button
+                            onClick={() => handleEmployeeClick(employee.manager!.id)}
                             className="text-blue-600 hover:text-blue-700 hover:underline font-medium"
                           >
                             {employee.manager.firstName} {employee.manager.lastName}
-                          </Link>
+                          </button>
                         ) : (
                           <span className="text-slate-400 italic">CEO Level</span>
                         )}
@@ -453,6 +472,19 @@ export default function EmployeesPage() {
           </div>
         )}
       </div>
+
+      {/* Modals */}
+      <AddEmployeeModal
+        open={addModalOpen}
+        onOpenChange={setAddModalOpen}
+        onSuccess={handleAddSuccess}
+      />
+      <EmployeeDetailModal
+        employeeId={selectedEmployeeId}
+        open={detailModalOpen}
+        onOpenChange={setDetailModalOpen}
+        onEmployeeClick={handleEmployeeClick}
+      />
     </div>
   )
 }
