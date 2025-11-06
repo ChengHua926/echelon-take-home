@@ -31,8 +31,18 @@ import { useDebounce } from '@/hooks/useDebounce'
 import { AddEmployeeModal } from '@/components/add-employee-modal'
 import { EmployeeDetailModal } from '@/components/employee-detail-modal'
 import { ImportEmployeesModal } from '@/components/import-employees-modal'
+import { ExportButton } from '@/components/export-button'
+import {
+  exportEmployeesToCSV,
+  exportEmployeesToExcel,
+  exportEmployeesToPDF,
+} from '@/lib/export-utils'
+import { useRole } from '@/contexts/RoleContext'
 
 export default function EmployeesPage() {
+  // Role-based access control
+  const { hasPermission } = useRole()
+
   // State management
   const [searchQuery, setSearchQuery] = useState('')
   const [department, setDepartment] = useState<string>('all')
@@ -128,23 +138,38 @@ export default function EmployeesPage() {
               </div>
             </div>
             <div className="flex items-center gap-3">
-              <Button
-                size="lg"
-                variant="outline"
-                onClick={() => setImportModalOpen(true)}
-                className="gap-2 border-slate-300 hover:bg-slate-50 hover:border-slate-400 shadow-sm hover:shadow-md transition-all font-semibold px-6 h-12 rounded-xl"
-              >
-                <Upload className="h-5 w-5" />
-                Import CSV/Excel
-              </Button>
-              <Button
-                size="lg"
-                onClick={() => setAddModalOpen(true)}
-                className="gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-lg shadow-blue-500/30 hover:shadow-xl hover:shadow-blue-500/40 transition-all text-white font-semibold px-8 h-12 rounded-xl"
-              >
-                <Plus className="h-5 w-5" />
-                Add Employee
-              </Button>
+              {hasPermission('employee.export') && (
+                <ExportButton
+                  onExportCSV={() => exportEmployeesToCSV(employees || [], 'employees')}
+                  onExportExcel={() => exportEmployeesToExcel(employees || [], 'employees')}
+                  onExportPDF={() => exportEmployeesToPDF(employees || [], 'employees')}
+                  label="Export"
+                  variant="outline"
+                  size="lg"
+                  className="border-slate-300 hover:bg-slate-50 hover:border-slate-400 shadow-sm hover:shadow-md transition-all font-semibold px-6 h-12 rounded-xl"
+                />
+              )}
+              {hasPermission('employee.import') && (
+                <Button
+                  size="lg"
+                  variant="outline"
+                  onClick={() => setImportModalOpen(true)}
+                  className="gap-2 border-slate-300 hover:bg-slate-50 hover:border-slate-400 shadow-sm hover:shadow-md transition-all font-semibold px-6 h-12 rounded-xl"
+                >
+                  <Upload className="h-5 w-5" />
+                  Import CSV/Excel
+                </Button>
+              )}
+              {hasPermission('employee.create') && (
+                <Button
+                  size="lg"
+                  onClick={() => setAddModalOpen(true)}
+                  className="gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-lg shadow-blue-500/30 hover:shadow-xl hover:shadow-blue-500/40 transition-all text-white font-semibold px-8 h-12 rounded-xl"
+                >
+                  <Plus className="h-5 w-5" />
+                  Add Employee
+                </Button>
+              )}
             </div>
           </div>
 

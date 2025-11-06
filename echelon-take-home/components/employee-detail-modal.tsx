@@ -7,6 +7,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
+import { useRole } from '@/contexts/RoleContext'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -81,6 +82,9 @@ export function EmployeeDetailModal({
   onOpenChange,
   onEmployeeClick,
 }: EmployeeDetailModalProps) {
+  // Role-based access control
+  const { hasPermission, canEditEmployee } = useRole()
+
   const [employee, setEmployee] = useState<Employee | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -314,49 +318,55 @@ export function EmployeeDetailModal({
                       )}
                     </div>
                   </div>
-                  <div className="flex flex-col gap-2 flex-shrink-0">
-                    {isEditMode ? (
-                      <>
-                        <Button
-                          onClick={handleSave}
-                          disabled={saving}
-                          size="sm"
-                          className="bg-white text-blue-600 hover:bg-white/90 cursor-pointer font-semibold shadow-md hover:shadow-lg transition-all"
-                        >
-                          {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
-                          Save
-                        </Button>
-                        <Button
-                          onClick={handleCancel}
-                          variant="outline"
-                          size="sm"
-                          className="bg-transparent border-white/30 text-white hover:bg-white/10 cursor-pointer font-semibold transition-all"
-                        >
-                          <X className="h-4 w-4 mr-2" />
-                          Cancel
-                        </Button>
-                      </>
-                    ) : (
-                      <>
-                        <Button
-                          onClick={() => setIsEditMode(true)}
-                          size="sm"
-                          className="bg-white text-blue-600 hover:bg-white/90 cursor-pointer font-semibold shadow-md hover:shadow-lg transition-all"
-                        >
-                          <Edit className="h-4 w-4 mr-2" />
-                          Edit
-                        </Button>
-                        <Button
-                          onClick={handleDelete}
-                          size="sm"
-                          className="cursor-pointer font-semibold shadow-md hover:shadow-lg transition-all bg-red-600 text-white hover:bg-red-700 border-0"
-                        >
-                          <Trash2 className="h-4 w-4 mr-2" />
-                          Delete
-                        </Button>
-                      </>
-                    )}
-                  </div>
+                  {(canEditEmployee(employeeId || '', employee?.department) || hasPermission('employee.delete')) && (
+                    <div className="flex flex-col gap-2 flex-shrink-0">
+                      {isEditMode ? (
+                        <>
+                          <Button
+                            onClick={handleSave}
+                            disabled={saving}
+                            size="sm"
+                            className="bg-white text-blue-600 hover:bg-white/90 cursor-pointer font-semibold shadow-md hover:shadow-lg transition-all"
+                          >
+                            {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
+                            Save
+                          </Button>
+                          <Button
+                            onClick={handleCancel}
+                            variant="outline"
+                            size="sm"
+                            className="bg-transparent border-white/30 text-white hover:bg-white/10 cursor-pointer font-semibold transition-all"
+                          >
+                            <X className="h-4 w-4 mr-2" />
+                            Cancel
+                          </Button>
+                        </>
+                      ) : (
+                        <>
+                          {canEditEmployee(employeeId || '', employee?.department) && (
+                            <Button
+                              onClick={() => setIsEditMode(true)}
+                              size="sm"
+                              className="bg-white text-blue-600 hover:bg-white/90 cursor-pointer font-semibold shadow-md hover:shadow-lg transition-all"
+                            >
+                              <Edit className="h-4 w-4 mr-2" />
+                              Edit
+                            </Button>
+                          )}
+                          {hasPermission('employee.delete') && (
+                            <Button
+                              onClick={handleDelete}
+                              size="sm"
+                              className="cursor-pointer font-semibold shadow-md hover:shadow-lg transition-all bg-red-600 text-white hover:bg-red-700 border-0"
+                            >
+                              <Trash2 className="h-4 w-4 mr-2" />
+                              Delete
+                            </Button>
+                          )}
+                        </>
+                      )}
+                    </div>
+                  )}
                 </div>
 
                 {/* Quick Info Pills */}

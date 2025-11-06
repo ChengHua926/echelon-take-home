@@ -30,8 +30,18 @@ import { useTeams } from '@/hooks/useTeams'
 import { useDebounce } from '@/hooks/useDebounce'
 import { TeamDetailModal } from '@/components/team-detail-modal'
 import { EmployeeDetailModal } from '@/components/employee-detail-modal'
+import { ExportButton } from '@/components/export-button'
+import {
+  exportTeamsToCSV,
+  exportTeamsToExcel,
+  exportTeamsToPDF,
+} from '@/lib/export-utils'
+import { useRole } from '@/contexts/RoleContext'
 
 export default function TeamsPage() {
+  // Role-based access control
+  const { hasPermission } = useRole()
+
   // State management
   const [searchQuery, setSearchQuery] = useState('')
   const [teamLeadId, setTeamLeadId] = useState<string>('all')
@@ -143,14 +153,29 @@ export default function TeamsPage() {
                 </p>
               </div>
             </div>
-            <Button
-              size="lg"
-              disabled
-              className="gap-2 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 shadow-lg shadow-indigo-500/30 hover:shadow-xl hover:shadow-indigo-500/40 transition-all text-white font-semibold px-8 h-12 rounded-xl opacity-50 cursor-not-allowed"
-            >
-              <Plus className="h-5 w-5" />
-              Add Team
-            </Button>
+            <div className="flex items-center gap-3">
+              {hasPermission('team.export') && (
+                <ExportButton
+                  onExportCSV={() => exportTeamsToCSV(teams || [], 'teams')}
+                  onExportExcel={() => exportTeamsToExcel(teams || [], 'teams')}
+                  onExportPDF={() => exportTeamsToPDF(teams || [], 'teams')}
+                  label="Export"
+                  variant="outline"
+                  size="lg"
+                  className="border-slate-300 hover:bg-slate-50 hover:border-slate-400 shadow-sm hover:shadow-md transition-all font-semibold px-6 h-12 rounded-xl"
+                />
+              )}
+              {hasPermission('team.create') && (
+                <Button
+                  size="lg"
+                  disabled
+                  className="gap-2 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 shadow-lg shadow-indigo-500/30 hover:shadow-xl hover:shadow-indigo-500/40 transition-all text-white font-semibold px-8 h-12 rounded-xl opacity-50 cursor-not-allowed"
+                >
+                  <Plus className="h-5 w-5" />
+                  Add Team
+                </Button>
+              )}
+            </div>
           </div>
 
           {/* Search Bar */}

@@ -10,6 +10,7 @@ import {
   Search,
   UsersRound
 } from 'lucide-react'
+import { AccountSwitcher } from './account-switcher'
 
 const navigation = [
   { name: 'Dashboard', href: '/', icon: LayoutDashboard },
@@ -58,11 +59,9 @@ export function Sidebar() {
         })}
       </nav>
 
-      {/* Footer */}
-      <div className="border-t border-gray-200/80 p-4">
-        <p className="text-xs text-gray-500 text-center">
-          Take Home Project by Cheng
-        </p>
+      {/* Account Switcher */}
+      <div className="p-4">
+        <AccountSwitcher />
       </div>
     </div>
   )
