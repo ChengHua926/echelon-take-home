@@ -1,5 +1,5 @@
 import { prisma } from '@/lib/prisma'
-import OrgChart from '@/components/org-chart'
+import OrgChartClient from './org-chart-client'
 
 // Recursively fetch all employees with their direct reports
 async function getEmployeeWithReports(employeeId: string): Promise<any> {
@@ -51,20 +51,5 @@ export default async function OrgChartPage() {
 
   const filteredData = orgData.filter(Boolean)
 
-  return (
-    <div className="h-full p-8">
-      {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-semibold tracking-tight text-gray-900">
-          Organization Chart
-        </h1>
-        <p className="text-gray-500 mt-1">
-          View your organization's reporting structure. Pan, zoom, and click nodes to explore.
-        </p>
-      </div>
-
-      {/* Org Chart */}
-      <OrgChart data={filteredData} />
-    </div>
-  )
+  return <OrgChartClient data={filteredData} />
 }
