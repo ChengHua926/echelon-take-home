@@ -16,22 +16,24 @@ export interface OrgChartNodeData {
   isExpanded?: boolean
   onToggleExpand?: () => void
   onClick?: () => void
+  [key: string]: unknown
 }
 
-const OrgChartNode = memo(({ data }: NodeProps<OrgChartNodeData>) => {
-  const initials = `${data.firstName[0]}${data.lastName[0]}`
-  const fullName = `${data.firstName} ${data.lastName}`
+const OrgChartNode = memo(({ data }: NodeProps) => {
+  const nodeData = data as OrgChartNodeData
+  const initials = `${nodeData.firstName[0]}${nodeData.lastName[0]}`
+  const fullName = `${nodeData.firstName} ${nodeData.lastName}`
 
   const handleClick = () => {
-    if (data.onClick) {
-      data.onClick()
+    if (nodeData.onClick) {
+      nodeData.onClick()
     }
   }
 
   const handleToggleExpand = (e: React.MouseEvent) => {
     e.stopPropagation()
-    if (data.onToggleExpand) {
-      data.onToggleExpand()
+    if (nodeData.onToggleExpand) {
+      nodeData.onToggleExpand()
     }
   }
 
@@ -56,13 +58,13 @@ const OrgChartNode = memo(({ data }: NodeProps<OrgChartNodeData>) => {
               {initials}
             </div>
             {/* Expand/Collapse Button */}
-            {data.hasChildren && (
+            {nodeData.hasChildren && (
               <button
                 onClick={handleToggleExpand}
                 className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-white border-2 border-cyan-500 flex items-center justify-center hover:bg-cyan-50 transition-colors shadow-md"
-                title={data.isExpanded ? 'Collapse' : 'Expand'}
+                title={nodeData.isExpanded ? 'Collapse' : 'Expand'}
               >
-                {data.isExpanded ? (
+                {nodeData.isExpanded ? (
                   <ChevronDown className="h-4 w-4 text-cyan-600" />
                 ) : (
                   <ChevronRight className="h-4 w-4 text-cyan-600" />
@@ -77,7 +79,7 @@ const OrgChartNode = memo(({ data }: NodeProps<OrgChartNodeData>) => {
               {fullName}
             </p>
             <p className="text-xs text-slate-600 mt-1 line-clamp-2">
-              {data.title}
+              {nodeData.title}
             </p>
           </div>
 
@@ -87,13 +89,13 @@ const OrgChartNode = memo(({ data }: NodeProps<OrgChartNodeData>) => {
             className="bg-cyan-100 text-cyan-700 border-cyan-200 text-xs px-2 py-0.5"
           >
             <Building2 className="h-3 w-3 mr-1" />
-            {data.department}
+            {nodeData.department}
           </Badge>
         </div>
       </Card>
 
       {/* Output Handle (connection point to children) */}
-      {data.hasChildren && (
+      {nodeData.hasChildren && (
         <Handle
           type="source"
           position={Position.Bottom}
