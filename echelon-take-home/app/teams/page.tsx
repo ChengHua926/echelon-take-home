@@ -13,7 +13,6 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import {
-  Plus,
   Search,
   X,
   Filter,
@@ -164,16 +163,6 @@ export default function TeamsPage() {
                   size="lg"
                   className="border-slate-300 hover:bg-slate-50 hover:border-slate-400 shadow-sm hover:shadow-md transition-all font-semibold px-6 h-12 rounded-xl"
                 />
-              )}
-              {hasPermission('team.create') && (
-                <Button
-                  size="lg"
-                  disabled
-                  className="gap-2 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 shadow-lg shadow-indigo-500/30 hover:shadow-xl hover:shadow-indigo-500/40 transition-all text-white font-semibold px-8 h-12 rounded-xl opacity-50 cursor-not-allowed"
-                >
-                  <Plus className="h-5 w-5" />
-                  Add Team
-                </Button>
               )}
             </div>
           </div>

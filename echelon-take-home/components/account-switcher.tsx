@@ -20,16 +20,6 @@ export function AccountSwitcher() {
 
   return (
     <div className="border-t border-slate-200 pt-6 mt-4">
-      {/* Demo Mode Badge */}
-      <div className="mb-4 px-2">
-        <div className="bg-gradient-to-r from-amber-50 to-orange-50 border-2 border-amber-200 rounded-xl px-4 py-2.5 text-center">
-          <div className="flex items-center justify-center gap-2">
-            <span className="text-2xl">🎭</span>
-            <span className="font-bold text-amber-800 text-sm tracking-wide">DEMO MODE</span>
-          </div>
-        </div>
-      </div>
-
       {/* Account Selector Card */}
       <div className="px-2">
         <Card className="p-4 bg-gradient-to-br from-white to-slate-50 border-slate-200 shadow-sm">
