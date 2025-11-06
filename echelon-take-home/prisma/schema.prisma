@@ -5,11 +5,118 @@
 // Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
 
 generator client {
-  provider = "prisma-client"
-  output   = "../app/generated/prisma"
+  provider = "prisma-client-js"
 }
 
 datasource db {
   provider = "postgresql"
   url   = env("DATABASE_URL")
+}
+
+// User model - Authentication layer
+model User {
+  id            String     @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  email         String     @unique @db.VarChar
+  passwordHash  String     @map("password_hash") @db.VarChar
+  role          String     @db.VarChar // admin, hr, manager, employee
+  createdAt     DateTime?  @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt     DateTime?  @default(now()) @map("updated_at") @db.Timestamp(6)
+
+  // Relations
+  employee      Employee?
+  auditLogs     AuditLog[]
+
+  @@index([email], map: "idx_users_email")
+  @@index([role], map: "idx_users_role")
+  @@map("users")
+}
+
+// Employee model - Core HR data with org chart
+model Employee {
+  id            String       @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  userId        String?      @unique @map("user_id") @db.Uuid
+  firstName     String       @map("first_name") @db.VarChar
+  lastName      String       @map("last_name") @db.VarChar
+  email         String       @unique @db.VarChar
+  title         String       @db.VarChar
+  department    String       @db.VarChar
+  managerId     String?      @map("manager_id") @db.Uuid
+  phone         String?      @db.VarChar
+  hireDate      DateTime     @map("hire_date") @db.Date
+  salary        Decimal?     @db.Decimal
+  status        String?      @default("active") @db.VarChar // active, inactive, terminated
+  createdAt     DateTime?    @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt     DateTime?    @default(now()) @map("updated_at") @db.Timestamp(6)
+
+  // Relations
+  user          User?        @relation(fields: [userId], references: [id], onDelete: SetNull)
+  manager       Employee?    @relation("EmployeeHierarchy", fields: [managerId], references: [id], onDelete: SetNull)
+  directReports Employee[]   @relation("EmployeeHierarchy")
+  teamMembers   TeamMember[]
+  ledTeams      Team[]
+
+  @@index([managerId], map: "idx_employees_manager")
+  @@index([department], map: "idx_employees_department")
+  @@index([status], map: "idx_employees_status")
+  @@index([userId], map: "idx_employees_user_id")
+  @@index([email], map: "idx_employees_email")
+  @@map("employees")
+}
+
+// Team model - Matrix organization with hierarchy
+model Team {
+  id            String       @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  name          String       @db.VarChar
+  description   String?      @db.Text
+  parentTeamId  String?      @map("parent_team_id") @db.Uuid
+  teamLeadId    String?      @map("team_lead_id") @db.Uuid
+  createdAt     DateTime?    @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt     DateTime?    @default(now()) @map("updated_at") @db.Timestamp(6)
+
+  // Relations
+  parentTeam    Team?        @relation("TeamHierarchy", fields: [parentTeamId], references: [id], onDelete: SetNull)
+  subTeams      Team[]       @relation("TeamHierarchy")
+  teamLead      Employee?    @relation(fields: [teamLeadId], references: [id], onDelete: SetNull)
+  members       TeamMember[]
+
+  @@index([parentTeamId], map: "idx_teams_parent")
+  @@index([teamLeadId], map: "idx_teams_lead")
+  @@map("teams")
+}
+
+// TeamMember model - Many-to-many junction table
+model TeamMember {
+  id          String    @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  teamId      String    @map("team_id") @db.Uuid
+  employeeId  String    @map("employee_id") @db.Uuid
+  joinedAt    DateTime? @default(now()) @map("joined_at") @db.Timestamp(6)
+
+  // Relations
+  team        Team      @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  employee    Employee  @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@unique([teamId, employeeId])
+  @@index([teamId], map: "idx_team_members_team")
+  @@index([employeeId], map: "idx_team_members_employee")
+  @@map("team_members")
+}
+
+// AuditLog model - Change tracking with JSONB
+model AuditLog {
+  id          String    @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  userId      String?   @map("user_id") @db.Uuid
+  entityType  String    @map("entity_type") @db.VarChar
+  entityId    String    @map("entity_id") @db.Uuid
+  action      String    @db.VarChar // create, update, delete
+  changes     Json?     @db.JsonB
+  ipAddress   String?   @map("ip_address") @db.VarChar
+  timestamp   DateTime? @default(now()) @db.Timestamp(6)
+
+  // Relations
+  user        User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([entityType, entityId], map: "idx_audit_logs_entity")
+  @@index([userId], map: "idx_audit_logs_user")
+  @@index([timestamp(sort: Desc)], map: "idx_audit_logs_timestamp")
+  @@map("audit_logs")
 }
