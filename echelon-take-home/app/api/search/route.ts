@@ -27,7 +27,7 @@ export async function GET(request: Request) {
     const skip = (page - 1) * limit
 
     // Search employees (if type is 'all' or 'employees')
-    let employees = []
+    let employees: any[] = []
     let employeesTotal = 0
 
     if (type === 'all' || type === 'employees') {
@@ -125,7 +125,7 @@ export async function GET(request: Request) {
     }
 
     // Search teams (if type is 'all' or 'teams')
-    let teams = []
+    let teams: any[] = []
     let teamsTotal = 0
 
     if (type === 'all' || type === 'teams') {
