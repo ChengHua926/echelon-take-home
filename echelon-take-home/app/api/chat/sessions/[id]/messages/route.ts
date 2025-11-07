@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { generateChatResponse, formatMessagesForOpenAI, generateChatTitle } from '@/lib/openai'
+import { generateChatTitle } from '@/lib/openai'
+import { Experimental_Agent as Agent, stepCountIs } from 'ai'
+import { openai } from '@ai-sdk/openai'
+import { hrisTools } from '@/lib/chat-tools'
 
 // GET /api/chat/sessions/[id]/messages - Get messages for a session
 export async function GET(
@@ -58,7 +61,7 @@ export async function GET(
   }
 }
 
-// POST /api/chat/sessions/[id]/messages - Send message and get AI response
+// POST /api/chat/sessions/[id]/messages - Send message and get AI streaming response with tools
 export async function POST(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -112,89 +115,112 @@ export async function POST(
     if (isFirstMessage && (!sessionTitle || sessionTitle === 'New Chat')) {
       try {
         sessionTitle = await generateChatTitle(content.trim())
+        // Update title immediately
+        await prisma.chatSession.update({
+          where: { id },
+          data: { title: sessionTitle },
+        })
       } catch (error) {
         console.error('Failed to generate title:', error)
-        sessionTitle = content.trim().substring(0, 50) // Fallback to first 50 chars
       }
     }
 
     // Save user message
-    const userMessage = await prisma.chatMessage.create({
+    await prisma.chatMessage.create({
       data: {
         sessionId: id,
         role: 'user',
         content: content.trim(),
-        tokens: 0, // Will be updated with actual token count
+        tokens: 0,
       },
     })
 
-    // Prepare messages for OpenAI
-    const conversationHistory = [
-      ...previousMessages.map(msg => ({
-        role: msg.role as 'user' | 'assistant' | 'system',
-        content: msg.content || '',
-      })),
-      {
-        role: 'user' as const,
-        content: content.trim(),
-      },
-    ]
+    // Create HRIS Agent
+    const hrisAgent = new Agent({
+      model: openai('gpt-5-mini'),
+      system: `You are an AI assistant integrated with an HRIS (Human Resource Information System).
+You have access to employee data, team information, organizational charts, and company statistics.
+Use the available tools to answer questions about employees, teams, departments, and organizational structure.
+Always be helpful, accurate, and respectful when discussing employee information.
+When asked about specific employees or teams, use the search tools first to find relevant information.`,
+      tools: hrisTools,
+      stopWhen: stepCountIs(10),
+    })
 
-    // Get AI response
-    let assistantContent = ''
-    let totalTokens = 0
+    // Build conversation history for the agent
+    const conversationHistory = previousMessages
+      .map(msg => {
+        if (msg.role === 'user') {
+          return `User: ${msg.content}`
+        } else if (msg.role === 'assistant') {
+          return `Assistant: ${msg.content}`
+        }
+        return ''
+      })
+      .filter(Boolean)
+      .join('\n\n')
 
-    try {
-      const response = await generateChatResponse(conversationHistory)
-      assistantContent = response.content
-      totalTokens = response.tokens
-    } catch (error) {
-      console.error('OpenAI API error:', error)
-      // Create error message instead
-      assistantContent = 'I apologize, but I encountered an error processing your message. Please try again.'
-    }
+    // Generate response with agent
+    const prompt = conversationHistory
+      ? `${conversationHistory}\n\nUser: ${content.trim()}`
+      : content.trim()
 
-    // Save assistant message
+    const result = await hrisAgent.generate({
+      prompt,
+    })
+
+    // Save assistant message with tool calls (only include tool-call steps)
+    const toolCallSteps = result.steps?.filter((step: any) => step.type === 'tool-call') || []
+
     const assistantMessage = await prisma.chatMessage.create({
       data: {
         sessionId: id,
         role: 'assistant',
-        content: assistantContent,
-        tokens: totalTokens,
+        content: result.text,
+        toolCalls: toolCallSteps.length > 0 ? JSON.parse(JSON.stringify(toolCallSteps)) : null,
+        tokens: result.usage?.totalTokens || 0,
       },
     })
 
-    // Update session with new token count and title if needed
-    const updateData: any = {
-      totalTokens: session.totalTokens + totalTokens,
-      updatedAt: new Date(),
+    // Save tool executions if any
+    if (result.steps && result.steps.length > 0) {
+      const toolExecutions = result.steps
+        .filter((step: any) => step.type === 'tool-call')
+        .map((step: any) => ({
+          messageId: assistantMessage.id,
+          sessionId: id,
+          toolName: step.toolName,
+          parameters: step.args || {},
+          result: step.result || {},
+          success: true,
+          executionTimeMs: null,
+        }))
+
+      if (toolExecutions.length > 0) {
+        await prisma.chatToolExecution.createMany({
+          data: toolExecutions,
+        })
+      }
     }
 
-    if (isFirstMessage && sessionTitle !== session.title) {
-      updateData.title = sessionTitle
-    }
-
+    // Update session with token count
     await prisma.chatSession.update({
       where: { id },
-      data: updateData,
+      data: {
+        totalTokens: session.totalTokens + (result.usage?.totalTokens || 0),
+        updatedAt: new Date(),
+      },
     })
 
-    // Return both messages
+    // Return the response
     return NextResponse.json({
-      userMessage: {
-        ...userMessage,
-        createdAt: userMessage.createdAt?.toISOString() || '',
-      },
-      assistantMessage: {
-        ...assistantMessage,
-        createdAt: assistantMessage.createdAt?.toISOString() || '',
-      },
-      sessionTitle: isFirstMessage ? sessionTitle : undefined,
+      message: assistantMessage,
+      text: result.text,
     })
   } catch (error) {
-    console.error('Error sending message:', error)
+    console.error('Error in chat stream:', error)
     return NextResponse.json(
-      { error: 'Failed to send message' },
+      { error: 'Failed to generate response' },
       { status: 500 }
     )
   }

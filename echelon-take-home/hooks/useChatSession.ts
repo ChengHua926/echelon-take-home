@@ -37,7 +37,7 @@ export function useChatSession(sessionId: string | null) {
     }
   }, [sessionId])
 
-  // Send message
+  // Send message with streaming response
   const sendMessage = async (content: string): Promise<{ success: boolean; error?: string }> => {
     if (!sessionId) {
       return { success: false, error: 'No session selected' }
@@ -50,6 +50,34 @@ export function useChatSession(sessionId: string | null) {
     setSending(true)
     setError(null)
 
+    // Add user message immediately (optimistic update)
+    const tempUserMessage: ChatMessage = {
+      id: `temp-user-${Date.now()}`,
+      sessionId,
+      role: 'user',
+      content: content.trim(),
+      toolCalls: null,
+      toolCallId: null,
+      tokens: 0,
+      createdAt: new Date().toISOString(),
+    }
+
+    setMessages(prev => [...prev, tempUserMessage])
+
+    // Add placeholder for assistant message
+    const tempAssistantMessage: ChatMessage = {
+      id: `temp-assistant-${Date.now()}`,
+      sessionId,
+      role: 'assistant',
+      content: '',
+      toolCalls: null,
+      toolCallId: null,
+      tokens: 0,
+      createdAt: new Date().toISOString(),
+    }
+
+    setMessages(prev => [...prev, tempAssistantMessage])
+
     try {
       const response = await fetch(`/api/chat/sessions/${sessionId}/messages`, {
         method: 'POST',
@@ -60,25 +88,42 @@ export function useChatSession(sessionId: string | null) {
       })
 
       if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.error || 'Failed to send message')
+        throw new Error('Failed to send message')
       }
 
+      // Handle JSON response from Agent
       const data = await response.json()
 
-      // Add both user and assistant messages to state
-      setMessages(prev => [...prev, data.userMessage, data.assistantMessage])
+      // Update the temporary assistant message with the actual response
+      setMessages(prev =>
+        prev.map(msg =>
+          msg.id === tempAssistantMessage.id
+            ? { ...msg, content: data.text }
+            : msg
+        )
+      )
 
-      // Update session title if it was auto-generated
-      if (data.sessionTitle && session) {
-        setSession(prev => prev ? { ...prev, title: data.sessionTitle } : null)
-      }
+      // Small delay to show the response before refetching
+      await new Promise(resolve => setTimeout(resolve, 100))
+
+      // Refetch to get the final messages with proper IDs from database
+      await fetchSession()
 
       return { success: true }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to send message'
       setError(errorMessage)
       console.error('Error sending message:', err)
+
+      // Remove temporary messages on error
+      setMessages(prev =>
+        prev.filter(
+          msg =>
+            msg.id !== tempUserMessage.id &&
+            msg.id !== tempAssistantMessage.id
+        )
+      )
+
       return { success: false, error: errorMessage }
     } finally {
       setSending(false)
