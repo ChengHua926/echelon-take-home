@@ -25,6 +25,7 @@ model User {
   // Relations
   employee      Employee?
   auditLogs     AuditLog[]
+  chatSessions  ChatSession[]
 
   @@index([email], map: "idx_users_email")
   @@index([role], map: "idx_users_role")
@@ -119,4 +120,71 @@ model AuditLog {
   @@index([userId], map: "idx_audit_logs_user")
   @@index([timestamp(sort: Desc)], map: "idx_audit_logs_timestamp")
   @@map("audit_logs")
+}
+
+// ChatSession model - AI chat conversations
+model ChatSession {
+  id             String              @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  userId         String              @map("user_id") @db.Uuid
+  title          String?             @db.VarChar
+  deletedAt      DateTime?           @map("deleted_at") @db.Timestamp(6)
+  totalTokens    Int                 @default(0) @map("total_tokens")
+  createdAt      DateTime?           @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt      DateTime?           @default(now()) @map("updated_at") @db.Timestamp(6)
+
+  // Relations
+  user           User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages       ChatMessage[]
+  toolExecutions ChatToolExecution[]
+
+  @@index([userId], map: "idx_chat_sessions_user")
+  @@index([deletedAt], map: "idx_chat_sessions_deleted")
+  @@index([updatedAt(sort: Desc)], map: "idx_chat_sessions_updated")
+  @@map("chat_sessions")
+}
+
+// ChatMessage model - Individual messages in conversations
+model ChatMessage {
+  id             String              @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  sessionId      String              @map("session_id") @db.Uuid
+  role           String              @db.VarChar // user, assistant, system, tool
+  content        String?             @db.Text
+  toolCalls      Json?               @map("tool_calls") @db.JsonB
+  toolCallId     String?             @map("tool_call_id") @db.VarChar
+  tokens         Int?                @default(0)
+  createdAt      DateTime?           @default(now()) @map("created_at") @db.Timestamp(6)
+
+  // Relations
+  session        ChatSession         @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  toolExecutions ChatToolExecution[]
+
+  @@index([sessionId], map: "idx_chat_messages_session")
+  @@index([createdAt], map: "idx_chat_messages_created")
+  @@index([role], map: "idx_chat_messages_role")
+  @@index([sessionId, createdAt], map: "idx_chat_messages_session_created")
+  @@map("chat_messages")
+}
+
+// ChatToolExecution model - Track tool usage in chat
+model ChatToolExecution {
+  id              String       @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  messageId       String       @map("message_id") @db.Uuid
+  sessionId       String       @map("session_id") @db.Uuid
+  toolName        String       @map("tool_name") @db.VarChar
+  parameters      Json         @db.JsonB
+  result          Json?        @db.JsonB
+  executionTimeMs Int?         @map("execution_time_ms")
+  success         Boolean?     @default(true)
+  errorMessage    String?      @map("error_message") @db.Text
+  executedAt      DateTime?    @default(now()) @map("executed_at") @db.Timestamp(6)
+
+  // Relations
+  message         ChatMessage  @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  session         ChatSession  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@index([sessionId], map: "idx_tool_executions_session")
+  @@index([messageId], map: "idx_tool_executions_message")
+  @@index([toolName], map: "idx_tool_executions_tool_name")
+  @@index([executedAt(sort: Desc)], map: "idx_tool_executions_executed")
+  @@map("chat_tool_executions")
 }

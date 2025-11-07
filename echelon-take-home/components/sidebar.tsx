@@ -8,7 +8,8 @@ import {
   Users,
   Network,
   Search,
-  UsersRound
+  UsersRound,
+  MessageSquare
 } from 'lucide-react'
 import { AccountSwitcher } from './account-switcher'
 
@@ -17,6 +18,7 @@ const navigation = [
   { name: 'Employees', href: '/employees', icon: Users },
   { name: 'Teams', href: '/teams', icon: UsersRound },
   { name: 'Org Chart', href: '/org-chart', icon: Network },
+  { name: 'Chat', href: '/chat', icon: MessageSquare },
   { name: 'Search', href: '/search', icon: Search },
 ]
 
